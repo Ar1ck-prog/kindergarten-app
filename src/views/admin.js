@@ -106,9 +106,32 @@ export async function renderAdmin() {
     }
 
     app.innerHTML = `
-      <div class="app-container">
-        <header class="app-header">
-          <div class="header-logo">${logoIcon(32)} BalaQ Admin</div>
+      
+    <header class="app-header">
+      <div class="header-inner">
+        <div class="header-title">
+          <span class="header-logo">${logoIcon(30)}</span>
+          <div>
+            <h1>Панель управления</h1>
+            <div class="header-subtitle">BalaQ Admin</div>
+          </div>
+        </div>
+        <button class="btn-icon" id="btn-logout" title="Выйти">${closeIcon(24)}</button>
+      </div>
+    </header>
+
+    <div class="tabs">
+      <button class="tab-btn ${currentTab === 'overview' ? 'active' : ''}" data-tab="overview">${shieldIcon(16)} Обзор</button>
+      <button class="tab-btn ${currentTab === 'groups' ? 'active' : ''}" data-tab="groups">${childrenIcon(16)} Группы</button>
+      <button class="tab-btn ${currentTab === 'users' ? 'active' : ''}" data-tab="users">${usersIcon(16)} Люди</button>
+    </div>
+
+    <main class="dashboard">
+      <div id="main-content">
+        ${tabHtml}
+      </div>
+    </main>
+  
           <div class="header-actions">
             <button class="btn-icon" id="btn-logout" title="Выйти">${closeIcon(24)}</button>
           </div>
@@ -164,7 +187,7 @@ export async function renderAdmin() {
       });
     });
 
-    document.querySelectorAll('.nav-btn').forEach(btn => {
+    document.querySelectorAll('.tab-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         currentTab = btn.dataset.tab;
         renderApp();
