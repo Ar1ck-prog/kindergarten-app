@@ -1,4 +1,4 @@
-import { signIn, signUp, createGroup, joinGroup, getProfile } from '../auth.js';
+import { signIn, signUp, createGroup, joinGroup, createKindergarten, joinKindergarten, joinExistingGroup, getProfile } from '../auth.js';
 import { supabase } from '../supabase.js';
 import { navigate } from '../router.js';
 import { logoIcon } from '../icons.js';
@@ -8,9 +8,11 @@ import { logoIcon } from '../icons.js';
  */
 export async function renderLogin() {
   const app = document.getElementById('app');
-  let currentMode = 'login'; // 'login', 'register', 'onboarding_teacher', 'onboarding_parent'
+  // Modes: login, register, onboarding_director, onboarding_teacher_kg, onboarding_teacher_group, onboarding_parent
+  let currentMode = 'login';
   let currentUser = null;
   let currentProfile = null;
+  let teacherKindergartenId = null; // set after teacher joins a kindergarten
 
   function renderView() {
     let formHtml = '';
@@ -62,11 +64,16 @@ export async function renderLogin() {
             <select class="form-input" id="role" required>
               <option value="parent">Родитель</option>
               <option value="teacher">Воспитатель</option>
+              <option value="director">Директор</option>
             </select>
           </div>
           <div class="form-group" id="teacherCodeGroup" style="display:none;">
             <label for="teacherCode">Секретный код воспитателя</label>
             <input class="form-input" type="text" id="teacherCode" placeholder="Введите код для воспитателей" />
+          </div>
+          <div class="form-group" id="directorCodeGroup" style="display:none;">
+            <label for="directorCode">Секретный код директора</label>
+            <input class="form-input" type="text" id="directorCode" placeholder="Введите код для директоров" />
           </div>
           <button class="btn btn-primary" type="submit" id="btn-submit">Зарегистрироваться</button>
           <div style="text-align:center; margin-top:15px; font-size: 0.9rem;">
@@ -74,16 +81,47 @@ export async function renderLogin() {
           </div>
         </form>
       `;
-    } else if (currentMode === 'onboarding_teacher') {
+    } else if (currentMode === 'onboarding_director') {
       formHtml = `
         <form id="auth-form" autocomplete="off">
-          <h3 style="margin-bottom: 15px; font-size:1.2rem;">Создайте группу</h3>
+          <h3 style="margin-bottom: 15px; font-size:1.2rem;">Создайте садик</h3>
           <p style="margin-bottom: 20px; font-size:0.9rem; color:var(--color-text-secondary);">
-            Чтобы начать работу, создайте группу. После создания вы получите код приглашения для родителей.
+            Введите название вашего детского садика. После создания вы получите код приглашения для воспитателей.
           </p>
           <div class="form-group">
+            <label for="kindergartenName">Название садика</label>
+            <input class="form-input" type="text" id="kindergartenName" placeholder="Например: Солнышко" required />
+          </div>
+          <button class="btn btn-primary" type="submit" id="btn-submit">Создать садик</button>
+        </form>
+      `;
+    } else if (currentMode === 'onboarding_teacher_kg') {
+      formHtml = `
+        <form id="auth-form" autocomplete="off">
+          <h3 style="margin-bottom: 15px; font-size:1.2rem;">Присоединитесь к садику</h3>
+          <p style="margin-bottom: 20px; font-size:0.9rem; color:var(--color-text-secondary);">
+            Введите код приглашения от директора вашего садика.
+          </p>
+          <div class="form-group">
+            <label for="kgInviteCode">Код садика</label>
+            <input class="form-input" type="text" id="kgInviteCode" placeholder="Например: AB38X9" required style="text-transform: uppercase;" />
+          </div>
+          <button class="btn btn-primary" type="submit" id="btn-submit">Присоединиться к садику</button>
+        </form>
+      `;
+    } else if (currentMode === 'onboarding_teacher_group') {
+      formHtml = `
+        <form id="auth-form" autocomplete="off">
+          <h3 style="margin-bottom: 15px; font-size:1.2rem;">Выберите или создайте группу</h3>
+          <p style="margin-bottom: 20px; font-size:0.9rem; color:var(--color-text-secondary);">
+            Создайте новую группу или присоединитесь к существующей.
+          </p>
+          <div id="existing-groups-list" style="margin-bottom: 20px;"></div>
+          <hr style="border: none; border-top: 1px solid var(--color-border); margin: 20px 0;" />
+          <h4 style="margin-bottom: 10px;">Или создайте новую группу:</h4>
+          <div class="form-group">
             <label for="groupName">Название группы</label>
-            <input class="form-input" type="text" id="groupName" placeholder="Например: Солнышко" required />
+            <input class="form-input" type="text" id="groupName" placeholder="Например: Звёздочки" required />
           </div>
           <button class="btn btn-primary" type="submit" id="btn-submit">Создать группу</button>
         </form>
@@ -142,6 +180,53 @@ export async function renderLogin() {
     `;
 
     bindEvents();
+
+    // If teacher group selection mode, load existing groups
+    if (currentMode === 'onboarding_teacher_group' && teacherKindergartenId) {
+      loadExistingGroups();
+    }
+  }
+
+  async function loadExistingGroups() {
+    const container = document.getElementById('existing-groups-list');
+    if (!container) return;
+
+    const { data: groups } = await supabase
+      .from('groups')
+      .select('id, name, invite_code')
+      .eq('kindergarten_id', teacherKindergartenId);
+
+    if (groups && groups.length > 0) {
+      container.innerHTML = `
+        <h4 style="margin-bottom: 10px;">Существующие группы:</h4>
+        <div style="display: grid; gap: 8px;">
+          ${groups.map(g => `
+            <button type="button" class="btn btn-secondary btn-join-group" data-group-name="${g.name}" style="text-align: left; padding: 12px;">
+              <strong>${g.name}</strong> <span style="font-size:0.8rem; color: var(--color-text-secondary);">(Код: ${g.invite_code})</span>
+            </button>
+          `).join('')}
+        </div>
+      `;
+
+      container.querySelectorAll('.btn-join-group').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const groupName = btn.dataset.groupName;
+          const { error } = await joinExistingGroup(currentUser.id, groupName);
+          if (error) {
+            showError(error);
+            return;
+          }
+          navigate('/teacher');
+        });
+      });
+    } else {
+      container.innerHTML = `
+        <p style="font-size: 0.9rem; color: var(--color-text-secondary);">В этом садике пока нет групп. Создайте первую!</p>
+      `;
+      // Make groupName not required so user must fill it
+      const groupNameInput = document.getElementById('groupName');
+      if (groupNameInput) groupNameInput.required = true;
+    }
   }
 
   function bindEvents() {
@@ -161,16 +246,18 @@ export async function renderLogin() {
       renderView();
     });
 
+    // Role change handler — show/hide secret code fields
     document.getElementById('role')?.addEventListener('change', (e) => {
-      const codeGroup = document.getElementById('teacherCodeGroup');
-      if (codeGroup) {
-        if (e.target.value === 'teacher') {
-          codeGroup.style.display = 'block';
-          document.getElementById('teacherCode').required = true;
-        } else {
-          codeGroup.style.display = 'none';
-          document.getElementById('teacherCode').required = false;
-        }
+      const teacherCodeGroup = document.getElementById('teacherCodeGroup');
+      const directorCodeGroup = document.getElementById('directorCodeGroup');
+      
+      if (teacherCodeGroup) {
+        teacherCodeGroup.style.display = e.target.value === 'teacher' ? 'block' : 'none';
+        document.getElementById('teacherCode').required = e.target.value === 'teacher';
+      }
+      if (directorCodeGroup) {
+        directorCodeGroup.style.display = e.target.value === 'director' ? 'block' : 'none';
+        document.getElementById('directorCode').required = e.target.value === 'director';
       }
     });
 
@@ -203,6 +290,7 @@ export async function renderLogin() {
         const passwordRepeat = document.getElementById('passwordRepeat').value;
         const role = document.getElementById('role').value;
         const teacherCode = document.getElementById('teacherCode')?.value.trim();
+        const directorCode = document.getElementById('directorCode')?.value.trim();
 
         if (password !== passwordRepeat) {
           showError('Пароли не совпадают!');
@@ -216,8 +304,8 @@ export async function renderLogin() {
           return;
         }
 
-        if (role === 'admin' && adminCode !== 'adminBalaQ2026') {
-          showError('Неверный секретный код администратора!');
+        if (role === 'director' && directorCode !== 'director2026') {
+          showError('Неверный секретный код директора!');
           resetBtn();
           return;
         }
@@ -233,9 +321,40 @@ export async function renderLogin() {
         currentUser = user;
         await checkProfileAndRoute();
 
-      } else if (currentMode === 'onboarding_teacher') {
+      } else if (currentMode === 'onboarding_director') {
+        const kindergartenName = document.getElementById('kindergartenName').value.trim();
+        const { kindergarten, error } = await createKindergarten(currentUser.id, kindergartenName);
+
+        if (error) {
+          showError('Не удалось создать садик: ' + error);
+          resetBtn();
+          return;
+        }
+        navigate('/director');
+
+      } else if (currentMode === 'onboarding_teacher_kg') {
+        const kgCode = document.getElementById('kgInviteCode').value.trim();
+        const { kindergarten, error } = await joinKindergarten(currentUser.id, kgCode);
+
+        if (error) {
+          showError(error);
+          resetBtn();
+          return;
+        }
+
+        teacherKindergartenId = kindergarten.id;
+        currentMode = 'onboarding_teacher_group';
+        renderView();
+
+      } else if (currentMode === 'onboarding_teacher_group') {
         const groupName = document.getElementById('groupName').value.trim();
-        const { group, error } = await createGroup(currentUser.id, groupName);
+        if (!groupName) {
+          showError('Введите название группы');
+          resetBtn();
+          return;
+        }
+
+        const { group, error } = await createGroup(currentUser.id, groupName, teacherKindergartenId);
 
         if (error) {
           showError('Не удалось создать группу: ' + error);
@@ -271,7 +390,6 @@ export async function renderLogin() {
 
         if (childError) {
           console.error('Ошибка добавления ребёнка:', childError);
-          // We don't block login if this fails, they are already in the group
         }
 
         navigate('/parent');
@@ -299,27 +417,50 @@ export async function renderLogin() {
     
     currentProfile = profile;
 
-    // Check if they need to join/create a group
+    // Admin goes straight to admin dashboard
     if (profile.role === 'admin') {
       navigate('/admin');
       return;
     }
 
-    if (!profile.group_name) {
-      if (profile.role === 'teacher') {
-        currentMode = 'onboarding_teacher';
+    // Director: needs to create kindergarten if not yet
+    if (profile.role === 'director') {
+      if (!profile.kindergarten_id) {
+        currentMode = 'onboarding_director';
+        renderView();
       } else {
-        currentMode = 'onboarding_parent';
+        navigate('/director');
       }
-      renderView();
-    } else {
-      // Already in a group
-      if (profile.role === 'teacher') {
+      return;
+    }
+
+    // Teacher: needs kindergarten first, then group
+    if (profile.role === 'teacher') {
+      if (!profile.kindergarten_id) {
+        currentMode = 'onboarding_teacher_kg';
+        renderView();
+      } else if (!profile.group_name) {
+        teacherKindergartenId = profile.kindergarten_id;
+        currentMode = 'onboarding_teacher_group';
+        renderView();
+      } else {
         navigate('/teacher');
+      }
+      return;
+    }
+
+    // Parent: needs to join a group
+    if (profile.role === 'parent') {
+      if (!profile.group_name) {
+        currentMode = 'onboarding_parent';
+        renderView();
       } else {
         navigate('/parent');
       }
+      return;
     }
+
+    navigate('/welcome');
   }
 
   renderView();
