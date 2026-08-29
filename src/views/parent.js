@@ -149,7 +149,7 @@ async function renderApp(app) {
         <div class="header-title">
           <span class="header-logo">${logoIcon(30)}</span>
           <div>
-            <h1>Sadik</h1>
+            <h1>BalaQ</h1>
             <div class="header-subtitle">${currentProfile.first_name} ${currentProfile.last_name}</div>
           </div>
         </div>

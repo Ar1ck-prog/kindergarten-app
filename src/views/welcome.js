@@ -12,7 +12,7 @@ export function renderWelcome() {
       <div class="welcome-content animate-slide-up delay-2">
         <div class="welcome-logo">
           <div class="welcome-logo-icon">${logoIcon(80)}</div>
-          <h1 class="welcome-title">Sadik</h1>
+          <h1 class="welcome-title">BalaQ</h1>
           <p class="welcome-subtitle">Добро пожаловать в лучшее пространство для развития вашего ребёнка</p>
         </div>
         

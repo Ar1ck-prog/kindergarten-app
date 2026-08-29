@@ -1,5 +1,5 @@
 /**
- * SVG Icon library for Sadik app.
+ * SVG Icon library for BalaQ app.
  * All icons use currentColor for stroke — control color via CSS.
  * No emojis anywhere.
  */

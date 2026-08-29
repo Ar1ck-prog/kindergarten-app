@@ -129,7 +129,7 @@ export async function renderLogin() {
         <div class="login-card animate-slide-up">
           <div class="login-logo">
             <div class="login-logo-icon">${logoIcon(60)}</div>
-            <h1>Sadik</h1>
+            <h1>BalaQ</h1>
             <p>${currentMode === 'login' ? 'Войдите в свой аккаунт' : 
                 currentMode === 'register' ? 'Создайте новый аккаунт' : 'Добро пожаловать!'}</p>
           </div>
