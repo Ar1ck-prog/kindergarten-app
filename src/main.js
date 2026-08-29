@@ -5,6 +5,7 @@ import { renderTeacher } from './views/teacher.js';
 import { renderParent } from './views/parent.js';
 import { renderProfile } from './views/profile.js';
 import { renderWelcome } from './views/welcome.js';
+import { renderAdmin } from './views/admin.js';
 
 // --- Toast utility (exported for views) ---
 export function showToast(message, type = 'success') {
@@ -26,6 +27,7 @@ route('/login', renderLogin);
 route('/teacher', renderTeacher);
 route('/parent', renderParent);
 route('/profile', renderProfile);
+route('/admin', renderAdmin);
 
 // --- Auto-redirect if already logged in ---
 async function init() {
@@ -33,7 +35,7 @@ async function init() {
   const path = window.location.hash.slice(1);
 
   // If already on a specific route, let the router handle it
-  if (path === '/teacher' || path === '/parent' || path === '/profile') {
+  if (path === '/teacher' || path === '/parent' || path === '/profile' || path === '/admin') {
     startRouter();
     return;
   }
@@ -52,7 +54,9 @@ async function init() {
     if (user) {
       const { profile } = await getProfile(user.id);
 
-      if (profile?.role === 'teacher') {
+      if (profile?.role === 'admin') {
+        navigate('/admin');
+      } else if (profile?.role === 'teacher') {
         navigate('/teacher');
       } else if (profile?.role === 'parent') {
         navigate('/parent');
