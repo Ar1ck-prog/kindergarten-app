@@ -2,7 +2,7 @@ import { supabase } from '../supabase.js';
 import { getCurrentUser, getProfile, signOut } from '../auth.js';
 import { navigate } from '../router.js';
 import { showToast } from '../main.js';
-import { logoIcon, shieldIcon, usersIcon, childrenIcon, closeIcon } from '../icons.js';
+import { logoIcon, shieldIcon, usersIcon, childrenIcon, closeIcon, avatarInitials } from '../icons.js';
 
 let currentTab = 'overview';
 let profiles = [];
@@ -115,7 +115,14 @@ export async function renderAdmin() {
             <div class="header-subtitle">BalaQ Admin</div>
           </div>
         </div>
-        <button class="btn-icon" id="btn-logout" title="Выйти">${closeIcon(24)}</button>
+        
+        <button class="header-profile-btn" id="btn-profile">
+          ${profile.avatar_url 
+            ? `<img src="${profile.avatar_url}" alt="Profile" class="header-avatar-img" />`
+            : `<div class="header-avatar" style="--avatar-hue: ${(profile.first_name.charCodeAt(0) * 37) % 360}">${profile.first_name[0] || ''}${profile.last_name[0] || ''}</div>`
+          }
+        </button>
+
       </div>
     </header>
 
@@ -132,9 +139,8 @@ export async function renderAdmin() {
     </main>
     `;
 
-    document.getElementById('btn-logout').addEventListener('click', async () => {
-      await signOut();
-      navigate('/login');
+    document.getElementById('btn-profile')?.addEventListener('click', () => {
+      navigate('/profile');
     });
 
     document.querySelectorAll('.btn-delete-group').forEach(btn => {

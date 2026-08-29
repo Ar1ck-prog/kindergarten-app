@@ -75,7 +75,7 @@ export async function renderProfile() {
             
             <div class="profile-role-badge">
               <span class="chip-icon">${userIcon(16)}</span>
-              Роль: ${profile.role === 'teacher' ? 'Воспитатель' : 'Родитель'}
+              Роль: ${profile.role === 'admin' ? 'Администратор' : profile.role === 'teacher' ? 'Воспитатель' : 'Родитель'}
             </div>
 
             <button type="submit" class="btn btn-primary" id="btn-save" ${isSubmitting ? 'disabled' : ''}>
@@ -96,7 +96,8 @@ export async function renderProfile() {
   function bindEvents() {
     document.getElementById('btn-back').addEventListener('click', () => {
       // Go back to the dashboard based on role
-      if (profile.role === 'teacher') navigate('/teacher');
+      if (profile.role === 'admin') navigate('/admin');
+      else if (profile.role === 'teacher') navigate('/teacher');
       else navigate('/parent');
     });
 
