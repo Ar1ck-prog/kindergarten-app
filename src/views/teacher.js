@@ -216,9 +216,21 @@ async function renderApp(app) {
       .order('created_at', { ascending: false });
 
     const groupedDates = {};
+    
+    // Учитываем локальный часовой пояс, чтобы день совпадал с реальным
+    const getLocalDateStr = (dateStr) => {
+      const d = dateStr ? new Date(dateStr) : new Date();
+      d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+      return d.toISOString().split('T')[0];
+    };
+
+    // Всегда показываем сегодняшний день в списке, даже если нет отметок
+    const todayStr = getLocalDateStr();
+    groupedDates[todayStr] = new Set();
+
     if (attendances) {
       attendances.forEach(a => {
-        const d = new Date(a.created_at).toISOString().split('T')[0];
+        const d = getLocalDateStr(a.created_at);
         if (!groupedDates[d]) groupedDates[d] = new Set();
         groupedDates[d].add(a.child_id);
       });
