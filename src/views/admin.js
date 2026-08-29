@@ -70,11 +70,18 @@ export async function renderAdmin() {
             const teacher = profiles.find(p => p.id === g.teacher_id);
             const groupChildren = childrenList.filter(c => c.group_id === g.id);
             return `
+              
               <div class="child-card" style="padding: 15px;">
-                <h3 style="margin: 0 0 10px 0;">${g.name} (Код: <strong>${g.invite_code}</strong>)</h3>
-                <p style="margin: 5px 0;">Воспитатель: ${teacher ? teacher.first_name + ' ' + teacher.last_name : 'Неизвестен'}</p>
-                <p style="margin: 5px 0; font-size: 0.9rem; color: var(--color-text-secondary);">Детей: ${groupChildren.length}</p>
+                <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                  <div>
+                    <h3 style="margin: 0 0 10px 0;">${g.name} (Код: <strong>${g.invite_code}</strong>)</h3>
+                    <p style="margin: 5px 0;">Воспитатель: ${teacher ? teacher.first_name + ' ' + teacher.last_name : 'Неизвестен'}</p>
+                    <p style="margin: 5px 0; font-size: 0.9rem; color: var(--color-text-secondary);">Детей: ${groupChildren.length}</p>
+                  </div>
+                  <button class="btn btn-secondary btn-sm btn-delete-group" data-id="${g.id}" style="color: red; border-color: red;">Удалить</button>
+                </div>
               </div>
+
             `;
           }).join('')}
         </div>
@@ -83,11 +90,15 @@ export async function renderAdmin() {
       tabHtml = `
         <div style="margin-top: 20px; display: grid; gap: 10px;">
           ${profiles.map(p => `
+            
             <div class="child-card" style="padding: 12px; display: flex; justify-content: space-between; align-items: center;">
               <div>
                 <strong style="display: block;">${p.first_name} ${p.last_name}</strong>
                 <span style="font-size: 0.8rem; color: var(--color-text-secondary); text-transform: capitalize;">${p.role}</span>
               </div>
+              <button class="btn btn-secondary btn-sm btn-delete-user" data-id="${p.id}" style="color: red; border-color: red;">Удалить</button>
+            </div>
+
             </div>
           `).join('')}
         </div>
@@ -128,6 +139,29 @@ export async function renderAdmin() {
     document.getElementById('btn-logout').addEventListener('click', async () => {
       await signOut();
       navigate('/login');
+    });
+
+    
+    document.querySelectorAll('.btn-delete-group').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        if (!confirm('Вы уверены, что хотите удалить эту группу? Это действие нельзя отменить.')) return;
+        const id = e.target.dataset.id;
+        await supabase.from('groups').delete().eq('id', id);
+        groups = groups.filter(g => g.id !== id);
+        renderApp();
+        showToast('Группа удалена');
+      });
+    });
+
+    document.querySelectorAll('.btn-delete-user').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        if (!confirm('Вы уверены, что хотите удалить этот профиль? Вход для пользователя будет сломан.')) return;
+        const id = e.target.dataset.id;
+        await supabase.from('profiles').delete().eq('id', id);
+        profiles = profiles.filter(p => p.id !== id);
+        renderApp();
+        showToast('Профиль удален');
+      });
     });
 
     document.querySelectorAll('.nav-btn').forEach(btn => {

@@ -319,6 +319,11 @@ export async function renderLogin() {
     currentProfile = profile;
 
     // Check if they need to join/create a group
+    if (profile.role === 'admin') {
+      navigate('/admin');
+      return;
+    }
+
     if (!profile.group_name) {
       if (profile.role === 'teacher') {
         currentMode = 'onboarding_teacher';
