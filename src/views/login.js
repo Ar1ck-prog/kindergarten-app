@@ -62,12 +62,7 @@ export async function renderLogin() {
             <select class="form-input" id="role" required>
               <option value="parent">Родитель</option>
               <option value="teacher">Воспитатель</option>
-              <option value="admin">Администратор</option>
             </select>
-          </div>
-          <div class="form-group" id="adminCodeGroup" style="display:none;">
-            <label for="adminCode">Секретный код администратора</label>
-            <input class="form-input" type="text" id="adminCode" placeholder="Введите код администратора" />
           </div>
           <div class="form-group" id="teacherCodeGroup" style="display:none;">
             <label for="teacherCode">Секретный код воспитателя</label>
@@ -167,27 +162,14 @@ export async function renderLogin() {
     });
 
     document.getElementById('role')?.addEventListener('change', (e) => {
-      const teacherGroup = document.getElementById('teacherCodeGroup');
-      const adminGroup = document.getElementById('adminCodeGroup');
-      const teacherInput = document.getElementById('teacherCode');
-      const adminInput = document.getElementById('adminCode');
-      
-      if (teacherGroup && adminGroup) {
+      const codeGroup = document.getElementById('teacherCodeGroup');
+      if (codeGroup) {
         if (e.target.value === 'teacher') {
-          teacherGroup.style.display = 'block';
-          adminGroup.style.display = 'none';
-          if(teacherInput) teacherInput.required = true;
-          if(adminInput) adminInput.required = false;
-        } else if (e.target.value === 'admin') {
-          adminGroup.style.display = 'block';
-          teacherGroup.style.display = 'none';
-          if(adminInput) adminInput.required = true;
-          if(teacherInput) teacherInput.required = false;
+          codeGroup.style.display = 'block';
+          document.getElementById('teacherCode').required = true;
         } else {
-          teacherGroup.style.display = 'none';
-          adminGroup.style.display = 'none';
-          if(teacherInput) teacherInput.required = false;
-          if(adminInput) adminInput.required = false;
+          codeGroup.style.display = 'none';
+          document.getElementById('teacherCode').required = false;
         }
       }
     });
@@ -221,7 +203,6 @@ export async function renderLogin() {
         const passwordRepeat = document.getElementById('passwordRepeat').value;
         const role = document.getElementById('role').value;
         const teacherCode = document.getElementById('teacherCode')?.value.trim();
-        const adminCode = document.getElementById('adminCode')?.value.trim();
 
         if (password !== passwordRepeat) {
           showError('Пароли не совпадают!');

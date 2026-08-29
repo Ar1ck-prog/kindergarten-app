@@ -106,7 +106,6 @@ export async function renderAdmin() {
     }
 
     app.innerHTML = `
-      
     <header class="app-header">
       <div class="header-inner">
         <div class="header-title">
@@ -131,32 +130,6 @@ export async function renderAdmin() {
         ${tabHtml}
       </div>
     </main>
-  
-          <div class="header-actions">
-            <button class="btn-icon" id="btn-logout" title="Выйти">${closeIcon(24)}</button>
-          </div>
-        </header>
-
-        <main class="app-main">
-          <h2 style="margin-bottom: 15px;">Панель управления</h2>
-          ${tabHtml}
-        </main>
-
-        <nav class="bottom-nav">
-          <button class="nav-btn ${currentTab === 'overview' ? 'active' : ''}" data-tab="overview">
-            ${shieldIcon(24)}
-            <span>Обзор</span>
-          </button>
-          <button class="nav-btn ${currentTab === 'groups' ? 'active' : ''}" data-tab="groups">
-            ${childrenIcon(24)}
-            <span>Группы</span>
-          </button>
-          <button class="nav-btn ${currentTab === 'users' ? 'active' : ''}" data-tab="users">
-            ${usersIcon(24)}
-            <span>Люди</span>
-          </button>
-        </nav>
-      </div>
     `;
 
     document.getElementById('btn-logout').addEventListener('click', async () => {
@@ -164,7 +137,6 @@ export async function renderAdmin() {
       navigate('/login');
     });
 
-    
     document.querySelectorAll('.btn-delete-group').forEach(btn => {
       btn.addEventListener('click', async (e) => {
         if (!confirm('Вы уверены, что хотите удалить эту группу? Это действие нельзя отменить.')) return;
