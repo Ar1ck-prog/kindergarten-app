@@ -26,7 +26,7 @@ export async function renderAdmin() {
 
   async function loadData() {
     const [pRes, gRes, cRes] = await Promise.all([
-      supabase.from('profiles').select('*').order('created_at', { ascending: false }),
+      supabase.from('profiles').select('*'),
       supabase.from('groups').select('*').order('created_at', { ascending: false }),
       supabase.from('children').select('*')
     ]);
