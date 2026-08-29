@@ -67,7 +67,7 @@ export async function renderAdmin() {
       tabHtml = `
         <div style="margin-top: 20px; display: grid; gap: 15px;">
           ${groups.length === 0 ? '<p>Нет групп.</p>' : groups.map(g => {
-            const teacher = profiles.find(p => p.id === g.teacher_id);
+            const teacher = profiles.find(p => p.id === g.created_by);
             const groupChildren = childrenList.filter(c => c.group_id === g.id);
             return `
               
