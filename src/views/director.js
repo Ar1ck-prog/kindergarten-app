@@ -1,4 +1,5 @@
 import { supabase } from '../supabase.js';
+import { escapeHtml } from '../utils.js';
 import { getCurrentUser, getProfile, signOut } from '../auth.js';
 import { navigate } from '../router.js';
 import { showToast } from '../main.js';

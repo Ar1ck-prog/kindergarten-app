@@ -1,4 +1,5 @@
 import { supabase } from '../supabase.js';
+import { escapeHtml } from '../utils.js';
 import { signOut, getCurrentUser, getProfile } from '../auth.js';
 import { navigate } from '../router.js';
 import { showToast } from '../main.js';
@@ -101,7 +102,7 @@ async function renderApp(app) {
               </div>
               ` : ''}
               ${msg.is_emergency ? `<div class="emergency-badge">${alertTriangleIcon(16)} ВАЖНОЕ СООБЩЕНИЕ</div>` : ''}
-              <div class="chat-body">${msg.message}</div>
+              <div class="chat-body">${escapeHtml(msg.message)}</div>
               ${msg.image_url ? `<img src="${msg.image_url}" class="chat-image" />` : ''}
               <div class="chat-time">${formatTime(msg.created_at)}</div>
             </div>

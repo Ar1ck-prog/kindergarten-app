@@ -1,4 +1,5 @@
 import { supabase } from '../supabase.js';
+import { escapeHtml } from '../utils.js';
 import { showToast } from '../main.js';
 import {
   bookOpenIcon, trophyIcon, cameraIcon, calendarIcon2,
@@ -50,10 +51,10 @@ export function renderHomework(groupName, role, onBack) {
               return `
               <div class="feature-card ${overdue ? 'overdue' : ''}">
                 <div class="feature-card-header">
-                  <span class="feature-card-title">${hw.title}</span>
+                  <span class="feature-card-title">${escapeHtml(hw.title)}</span>
                   <span class="feature-card-date ${overdue ? 'text-error' : ''}">${formatDate(hw.due_date)}</span>
                 </div>
-                ${hw.description ? `<div class="feature-card-body">${hw.description}</div>` : ''}
+                ${hw.description ? `<div class="feature-card-body">${escapeHtml(hw.description)}</div>` : ''}
                 ${overdue ? '<span class="badge badge-error">Просрочено</span>' : ''}
               </div>`;
             }).join('')}

@@ -1,4 +1,5 @@
 import { supabase } from '../supabase.js';
+import { escapeHtml } from '../utils.js';
 import { getCurrentUser, getProfile } from '../auth.js';
 import { navigate } from '../router.js';
 import { showToast } from '../main.js';
@@ -80,10 +81,11 @@ export async function renderTeacher() {
   if (profileError || !profile || profile.role !== 'teacher') return navigate('/login');
   currentProfile = profile;
 
-  // Load children
+  // Load children ONLY from this teacher's group
   const { data: children, error: childrenError } = await supabase
     .from('children')
     .select('id, first_name, last_name, group_name, allergies')
+    .eq('group_name', profile.group_name)
     .order('first_name');
 
   if (childrenError) {
@@ -91,7 +93,7 @@ export async function renderTeacher() {
     return;
   }
   
-  childrenList = children;
+  childrenList = children || [];
   groupNameStr = currentProfile.group_name || (children[0]?.group_name || 'Group');
 
   // Load group invite code
@@ -182,7 +184,7 @@ async function renderApp(app) {
               </div>
               ` : ''}
               ${msg.is_emergency ? `<div class="emergency-badge">${alertTriangleIcon(16)} ВАЖНОЕ СООБЩЕНИЕ</div>` : ''}
-              <div class="chat-body">${msg.message}</div>
+              <div class="chat-body">${escapeHtml(msg.message)}</div>
               ${msg.image_url ? `<img src="${msg.image_url}" class="chat-image" />` : ''}
               <div class="chat-time">${formatTime(msg.created_at)}</div>
             </div>
@@ -483,7 +485,7 @@ function bindEvents(app) {
 
     document.querySelectorAll('.child-card:not(.absent)').forEach(card => {
       card.addEventListener('click', () => {
-        const childId = parseInt(card.dataset.childId, 10);
+        const childId = card.dataset.childId;
         
         if (isAttendanceMode) {
           if (selectedForAttendance.has(childId)) {

@@ -1,4 +1,5 @@
 import { supabase } from '../supabase.js';
+import { escapeHtml } from '../utils.js';
 import { getCurrentUser, getProfile } from '../auth.js';
 import { navigate } from '../router.js';
 import { showToast } from '../main.js';
@@ -88,7 +89,7 @@ export async function renderAdmin() {
                 <div style="display: flex; justify-content: space-between; align-items: flex-start;">
                   <div>
                     <h3 style="margin: 0 0 8px 0;">${buildingIcon(18)} ${kg.name}</h3>
-                    <p style="margin: 4px 0; font-size: 0.9rem;">Директор: <strong>${director ? director.first_name + ' ' + director.last_name : 'Неизвестен'}</strong></p>
+                    <p style="margin: 4px 0; font-size: 0.9rem;">Директор: <strong>${director ? escapeHtml(director.first_name) + ' ' + escapeHtml(director.last_name) : 'Неизвестен'}</strong></p>
                     <p style="margin: 4px 0; font-size: 0.85rem; color: var(--color-text-secondary);">
                       Код: <strong>${kg.invite_code}</strong> · Групп: ${kgGroups.length} · Воспитателей: ${kgTeachers.length} · Детей: ${kgChildren.length}
                     </p>
@@ -132,7 +133,7 @@ export async function renderAdmin() {
             return `
               <div class="child-card" style="padding: 12px; display: flex; justify-content: space-between; align-items: center;">
                 <div>
-                  <strong style="display: block;">${p.first_name} ${p.last_name}</strong>
+                  <strong style="display: block;">${escapeHtml(p.first_name)} ${escapeHtml(p.last_name)}</strong>
                   <span style="font-size: 0.8rem; color: var(--color-text-secondary);">
                     ${roleLabel}${kg ? ' · ' + kg.name : ''}${p.group_name ? ' · Группа: ' + p.group_name : ''}
                   </span>
