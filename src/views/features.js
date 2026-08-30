@@ -51,8 +51,11 @@ export function renderHomework(groupName, role, onBack) {
               return `
               <div class="feature-card ${overdue ? 'overdue' : ''}">
                 <div class="feature-card-header">
-                  <span class="feature-card-title">${escapeHtml(hw.title)}</span>
-                  <span class="feature-card-date ${overdue ? 'text-error' : ''}">${formatDate(hw.due_date)}</span>
+                  <div style="display: flex; flex-direction: column;">
+                    <span class="feature-card-title">${escapeHtml(hw.title)}</span>
+                    <span class="feature-card-date ${overdue ? 'text-error' : ''}">${formatDate(hw.due_date)}</span>
+                  </div>
+                  ${role === 'teacher' ? `<button class="btn-icon btn-delete-hw" data-id="${hw.id}" style="color: var(--color-error); font-size: 0.85rem;">Удалить</button>` : ''}
                 </div>
                 ${hw.description ? `<div class="feature-card-body">${escapeHtml(hw.description)}</div>` : ''}
                 ${overdue ? '<span class="badge badge-error">Просрочено</span>' : ''}
@@ -76,6 +79,17 @@ export function renderHomework(groupName, role, onBack) {
       if (error) return showToast('Ошибка: ' + error.message, 'error');
       showToast('Задание добавлено');
       renderHomework(groupName, role, onBack)(container);
+    });
+
+    container.querySelectorAll('.btn-delete-hw').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        if (!confirm('Удалить это задание?')) return;
+        const id = e.target.dataset.id;
+        const { error } = await supabase.from('homework').delete().eq('id', id);
+        if (error) return showToast('Ошибка: ' + error.message, 'error');
+        showToast('Задание удалено');
+        renderHomework(groupName, role, onBack)(container);
+      });
     });
   };
 }
