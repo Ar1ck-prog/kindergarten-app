@@ -225,9 +225,10 @@ export function renderGallery(groupName, role, onBack) {
         <div class="gallery-grid">
           ${list.length === 0 ? '<div class="empty-state"><div class="empty-state-text">Пока нет фотографий</div></div>' :
             list.map(p => `
-              <div class="gallery-item" data-url="${p.image_url}">
-                <img src="${p.image_url}" alt="${p.title || 'Фото'}" loading="lazy" />
-                ${p.title ? `<div class="gallery-caption">${p.title}</div>` : ''}
+              <div class="gallery-item" data-url="${p.image_url}" style="position: relative;">
+                ${role === 'teacher' ? `<button class="btn-icon btn-delete-photo" data-id="${p.id}" style="position: absolute; top: 5px; right: 5px; background: rgba(255,255,255,0.8); border-radius: 50%; color: var(--color-error); font-size: 0.8rem; padding: 4px; z-index: 10;">Удалить</button>` : ''}
+                <img src="${p.image_url}" alt="${escapeHtml(p.title) || 'Фото'}" loading="lazy" />
+                ${p.title ? `<div class="gallery-caption">${escapeHtml(p.title)}</div>` : ''}
                 <div class="gallery-date">${formatDate(p.created_at)}</div>
               </div>
             `).join('')}
@@ -266,6 +267,18 @@ export function renderGallery(groupName, role, onBack) {
       if (error) return showToast('Ошибка: ' + error.message, 'error');
       showToast('Фото загружено');
       renderGallery(groupName, role, onBack)(container);
+    });
+
+    container.querySelectorAll('.btn-delete-photo').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        e.stopPropagation(); // Prevent lightbox from opening
+        if (!confirm('Удалить это фото?')) return;
+        const id = e.target.dataset.id;
+        const { error } = await supabase.from('photo_gallery').delete().eq('id', id);
+        if (error) return showToast('Ошибка: ' + error.message, 'error');
+        showToast('Фото удалено');
+        renderGallery(groupName, role, onBack)(container);
+      });
     });
 
     // Lightbox
@@ -330,10 +343,13 @@ export function renderEvents(groupName, role, onBack) {
             <div class="feature-card event-card event-${ev.event_type}">
               <div class="event-type-badge">${eventTypeLabel(ev.event_type)}</div>
               <div class="feature-card-header">
-                <span class="feature-card-title">${ev.title}</span>
-                <span class="feature-card-date">${formatDate(ev.event_date)}</span>
+                <div style="display: flex; flex-direction: column;">
+                  <span class="feature-card-title">${escapeHtml(ev.title)}</span>
+                  <span class="feature-card-date">${formatDate(ev.event_date)}</span>
+                </div>
+                ${role === 'teacher' ? `<button class="btn-icon btn-delete-ev" data-id="${ev.id}" style="color: var(--color-error); font-size: 0.85rem;">Удалить</button>` : ''}
               </div>
-              ${ev.description ? `<div class="feature-card-body">${ev.description}</div>` : ''}
+              ${ev.description ? `<div class="feature-card-body">${escapeHtml(ev.description)}</div>` : ''}
             </div>
           `).join('')}
         </div>
@@ -345,8 +361,11 @@ export function renderEvents(groupName, role, onBack) {
           ${past.map(ev => `
             <div class="feature-card event-card past">
               <div class="feature-card-header">
-                <span class="feature-card-title">${ev.title}</span>
-                <span class="feature-card-date">${formatDate(ev.event_date)}</span>
+                <div style="display: flex; flex-direction: column;">
+                  <span class="feature-card-title">${escapeHtml(ev.title)}</span>
+                  <span class="feature-card-date">${formatDate(ev.event_date)}</span>
+                </div>
+                ${role === 'teacher' ? `<button class="btn-icon btn-delete-ev" data-id="${ev.id}" style="color: var(--color-error); font-size: 0.85rem;">Удалить</button>` : ''}
               </div>
             </div>
           `).join('')}
@@ -370,6 +389,17 @@ export function renderEvents(groupName, role, onBack) {
       if (error) return showToast('Ошибка: ' + error.message, 'error');
       showToast('Событие добавлено');
       renderEvents(groupName, role, onBack)(container);
+    });
+
+    container.querySelectorAll('.btn-delete-ev').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        if (!confirm('Удалить это событие?')) return;
+        const id = e.target.dataset.id;
+        const { error } = await supabase.from('events').delete().eq('id', id);
+        if (error) return showToast('Ошибка: ' + error.message, 'error');
+        showToast('Событие удалено');
+        renderEvents(groupName, role, onBack)(container);
+      });
     });
   };
 }
@@ -423,9 +453,10 @@ export function renderSchedule(groupName, role, onBack) {
               <div class="schedule-slots">
                 ${grouped[i].length === 0 ? '<div class="schedule-empty">Нет занятий</div>' :
                   grouped[i].map(s => `
-                    <div class="schedule-slot">
+                    <div class="schedule-slot" style="position: relative; padding-right: 30px;">
                       <span class="schedule-time">${s.time_slot}</span>
-                      <span class="schedule-activity">${s.activity}</span>
+                      <span class="schedule-activity">${escapeHtml(s.activity)}</span>
+                      ${role === 'teacher' ? `<button class="btn-icon btn-delete-sch" data-id="${s.id}" style="position: absolute; right: 0; color: var(--color-error); font-size: 0.8rem; padding: 4px;">&times;</button>` : ''}
                     </div>
                   `).join('')}
               </div>
@@ -449,6 +480,17 @@ export function renderSchedule(groupName, role, onBack) {
       if (error) return showToast('Ошибка: ' + error.message, 'error');
       showToast('Занятие добавлено');
       renderSchedule(groupName, role, onBack)(container);
+    });
+
+    container.querySelectorAll('.btn-delete-sch').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        if (!confirm('Удалить это занятие?')) return;
+        const id = e.target.dataset.id;
+        const { error } = await supabase.from('schedule').delete().eq('id', id);
+        if (error) return showToast('Ошибка: ' + error.message, 'error');
+        showToast('Занятие удалено');
+        renderSchedule(groupName, role, onBack)(container);
+      });
     });
   };
 }
@@ -503,9 +545,10 @@ export function renderMealMenu(groupName, role, onBack) {
                 <div class="menu-day-title">${date === today ? '📌 Сегодня' : formatDate(date)}</div>
                 <div class="menu-meals">
                   ${grouped[date].map(m => `
-                    <div class="menu-meal-item">
+                    <div class="menu-meal-item" style="position: relative; padding-right: 30px;">
                       <span class="menu-meal-type">${m.meal_type}</span>
-                      <span class="menu-meal-desc">${m.description}</span>
+                      <span class="menu-meal-desc">${escapeHtml(m.description)}</span>
+                      ${role === 'teacher' ? `<button class="btn-icon btn-delete-meal" data-id="${m.id}" style="position: absolute; right: 0; top: 0; bottom: 0; color: var(--color-error); font-size: 0.8rem; padding: 4px;">&times;</button>` : ''}
                     </div>
                   `).join('')}
                 </div>
@@ -529,6 +572,17 @@ export function renderMealMenu(groupName, role, onBack) {
       if (error) return showToast('Ошибка: ' + error.message, 'error');
       showToast('Меню обновлено');
       renderMealMenu(groupName, role, onBack)(container);
+    });
+
+    container.querySelectorAll('.btn-delete-meal').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        if (!confirm('Удалить это блюдо?')) return;
+        const id = e.target.dataset.id;
+        const { error } = await supabase.from('meal_menu').delete().eq('id', id);
+        if (error) return showToast('Ошибка: ' + error.message, 'error');
+        showToast('Блюдо удалено');
+        renderMealMenu(groupName, role, onBack)(container);
+      });
     });
   };
 }
