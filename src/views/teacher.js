@@ -143,8 +143,8 @@ async function renderApp(app) {
       <div class="children-grid ${isAttendanceMode ? 'attendance-mode' : ''}">
         ${childrenList.map((child, i) => {
           const childAv = avatarInitials(child.first_name, child.last_name);
-          const isAbsent = absencesList.find(a => a.child_id === child.id);
-          const isSelected = selectedForAttendance.has(child.id);
+          const isAbsent = absencesList.find(a => String(a.child_id) === String(child.id));
+          const isSelected = selectedForAttendance.has(String(child.id));
           
           return `
           <div class="child-card ${selectedChild?.id === child.id ? 'selected' : ''} ${isAbsent ? 'absent' : ''} ${isSelected ? 'attendance-selected' : ''} animate-slide-up delay-${Math.min(i + 1, 6)}"
@@ -474,8 +474,8 @@ function bindEvents(app) {
 
     document.getElementById('btn-select-all-attendance')?.addEventListener('click', () => {
       childrenList.forEach(c => {
-        if (!absencesList.find(a => a.child_id === c.id)) {
-          selectedForAttendance.add(c.id);
+        if (!absencesList.find(a => String(a.child_id) === String(c.id))) {
+          selectedForAttendance.add(String(c.id));
         }
       });
       renderApp(app);
@@ -488,13 +488,13 @@ function bindEvents(app) {
         const childId = card.dataset.childId;
         
         if (isAttendanceMode) {
-          if (selectedForAttendance.has(childId)) {
-            selectedForAttendance.delete(childId);
+          if (selectedForAttendance.has(String(childId))) {
+            selectedForAttendance.delete(String(childId));
           } else {
-            selectedForAttendance.add(childId);
+            selectedForAttendance.add(String(childId));
           }
         } else {
-          selectedChild = childrenList.find(c => c.id === childId) || null;
+          selectedChild = childrenList.find(c => String(c.id) === String(childId)) || null;
           selectedActivity = null;
           selectedStatus = null;
         }
