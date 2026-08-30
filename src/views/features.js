@@ -137,10 +137,11 @@ export function renderAchievements(groupName, role, childrenList, onBack, specif
         <div class="feature-list achievements-grid">
           ${list.length === 0 ? '<div class="empty-state"><div class="empty-state-text">Пока нет наград</div></div>' :
             list.map(a => `
-              <div class="achievement-card">
+              <div class="achievement-card" style="position: relative;">
+                ${role === 'teacher' ? `<button class="btn-icon btn-delete-ach" data-id="${a.id}" style="position: absolute; top: 5px; right: 5px; color: var(--color-error); font-size: 0.8rem; padding: 4px;">Удалить</button>` : ''}
                 <div class="achievement-icon">${a.icon}</div>
-                <div class="achievement-title">${a.title}</div>
-                ${a.children ? `<div class="achievement-child">${a.children.first_name} ${a.children.last_name}</div>` : ''}
+                <div class="achievement-title">${escapeHtml(a.title)}</div>
+                ${a.children ? `<div class="achievement-child">${escapeHtml(a.children.first_name)} ${escapeHtml(a.children.last_name)}</div>` : ''}
                 <div class="achievement-date">${formatDate(a.created_at)}</div>
               </div>
             `).join('')}
@@ -173,6 +174,17 @@ export function renderAchievements(groupName, role, childrenList, onBack, specif
       if (error) return showToast('Ошибка: ' + error.message, 'error');
       showToast('Награда вручена!');
       renderAchievements(groupName, role, childrenList, onBack, specificChildId)(container);
+    });
+
+    container.querySelectorAll('.btn-delete-ach').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        if (!confirm('Удалить эту награду?')) return;
+        const id = e.target.dataset.id;
+        const { error } = await supabase.from('achievements').delete().eq('id', id);
+        if (error) return showToast('Ошибка: ' + error.message, 'error');
+        showToast('Награда удалена');
+        renderAchievements(groupName, role, childrenList, onBack, specificChildId)(container);
+      });
     });
   };
 }
